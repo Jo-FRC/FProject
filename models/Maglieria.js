@@ -1,28 +1,30 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const MaglieriaSchema= new Schema({
-  name: {
-    type: String,
-    reuired: true
-  },
-  image: {
-    type: String
-  },
-  city: {
-    type: String
-  },
-  email: {
-    type: String
-  },
-  phone: {
-    type: String
-  },
-  colors: [
-    {
-      color: {
-        type: String
+  modelType: {
+    modelType: [
+      {
+        name: {
+          type: String,
+          reuired: true
+        },
+        image: {
+          type: String
+        },
+        description: {
+          type: String
+        },
+        colors: [
+          {
+            color: {
+              type: String
+            }
+        ]
       }
-  ]
+    ]
+  },
+
 });
 
 module.exports = Maglieria = mongoose.model('maglieria', MaglieriaSchema);
