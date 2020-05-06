@@ -58,4 +58,83 @@ router.post('/',
 
 });
 
+// @route   GET api/customers
+// @desc    Get all customers
+// @access  Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const customers = await Customer.find().sort({ name: 1 });
+    res.json(customers);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error')
+  }
+});
+
+// @route   GET api/customer
+// @desc    Get a customer by id
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+
+    if(!customer) {
+      return res.status(404).json({ msg: 'Customer not found' })
+    }
+    res.json(customer);
+  } catch (err) {
+    console.error(err.message);
+    if(err.name == 'CastError') {
+      return res.status(400).json({ msg: 'Customer not found' });
+    }
+    res.status(500).send('Server Error')
+  }
+});
+
+// @route   PUT api/customer
+// @desc    Modify customer data
+// @access  Private
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const customer = await Post.findById(req.params.id);
+
+     // Check if the post has already been liked by a user
+     if(post.likes.filter(like => like.user.toString() === req.user.id).length > 0) {
+       return res.status(400).json({ msg: 'Post already liked' });
+     }
+
+     post.likes.unshift({ user: req.user.id });
+
+     await post.save();
+
+     res.json(post.likes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE api/customer
+// @desc    Remove customer
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+
+    if(!customer) {
+      return res.status(404).json({ msg: 'Customer not found' })
+    }
+
+    await customer.remove();
+
+    res.json({msg: 'Customer removed'});
+  } catch (err) {
+    console.error(err.message);
+    if(err.name == 'CastError') {
+      return res.status(400).json({ msg: 'Customer not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;
