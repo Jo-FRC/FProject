@@ -20,6 +20,7 @@ const MaglieriaSchema= new Schema({
             color: {
               type: String
             }
+          }
         ]
       }
     ]
