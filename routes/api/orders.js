@@ -1,77 +1,58 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const config = require('config');
+const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator'); // /check
 
 const User = require('../../models/User');
+const Post = require('../../models/Post');
+const Profile = require('../../models/Profile');
 
-// @route   Post api/users
-// @desc    Register user
-// @access  Public
+// @route   POST api/orders
+// @desc    Create an order
+// @access  Private
 router.post('/',
-// check function by express validator, gives an error message if name input is empty
-[
-  check('name', 'Name is required')
-    .not()
-    .isEmpty(),
-  check('email', 'Please include a valid email').isEmail(),
-  check(
-    'password',
-    'Please enter a password with 6 or more characters')
-    .isLength({min: 6})
-],
-async (req, res) => {
-  const errors = validationResult(req);
-  if(!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array()});
-  }
-  const { name, email, password } = req.body;
-
-  try {
-    // since we destructured email from req.body we don't have to do email: email (same name just use once)
-    let user = await User.findOne({ email });
-
-    if(user) {
-      // since for the other err msg we have an array of objs in check we add this one in this "funny" way
-      return res
-      .status(400)
-      .json({ errors: [{ msg: 'User already exists' }] });
+  [ auth,
+    [
+      check('text', 'Text is required').not().isEmpty(),
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array()});
     }
 
+    try {
+      const user = await User.findById(req.user.id).select('-password');
 
-    user = new User({
-      name,
-      email,
-      password
-    });
-
-    const salt = await bcrypt.genSalt(10);
-
-    user.password = await bcrypt.hash(password, salt);
-
-    await user.save();
-
-    const payload = {
-      user: {
-        id: user.id
-      }
-    }
-
-    jwt.sign(
-      payload,
-      config.get('jwtSecret'),
-      { expiresIn: 360000000},
-      (err, token) => {
-        if(err) throw err;
-        res.json({ token });
+      const newPost = new Post({
+        text: req.body.text,
+        name: user.name,
+        avatar: user.avatar,
+        user: req.user.id
       });
-  } catch(err){
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
 
+      const post = await newPost.save();
+
+      res.json(post);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+
+});
+
+// @route   GET api/posts
+// @desc    Get all posts
+// @access  Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ date: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error')
+  }
 });
 
 module.exports = router;
