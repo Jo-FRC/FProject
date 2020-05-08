@@ -4,8 +4,8 @@ const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator'); // /check
 
 const User = require('../../models/User');
-const Post = require('../../models/Post');
-const Profile = require('../../models/Profile');
+const Order = require('../../models/Order');
+const Customer = require('../../models/Customer');
 
 // @route   POST api/orders
 // @desc    Create an order
@@ -13,7 +13,8 @@ const Profile = require('../../models/Profile');
 router.post('/',
   [ auth,
     [
-      check('text', 'Text is required').not().isEmpty(),
+      check('ordernumber', 'Order number is required').not().isEmpty(),
+      check('name', 'Name is required').not().isEmpty(),
     ]
   ],
   async (req, res) => {
@@ -22,19 +23,25 @@ router.post('/',
       return res.status(400).json({ errors: errors.array()});
     }
 
+    const customer = await Customer.findOne({ "name" : req.body.name});
     try {
-      const user = await User.findById(req.user.id).select('-password');
-
-      const newPost = new Post({
-        text: req.body.text,
-        name: user.name,
-        avatar: user.avatar,
-        user: req.user.id
+      console.log(customer);
+      const newOrder = new Order({
+        ordernumber:  req.body.ordernumber,
+        text:  req.body.text,
+        name: customer.name,
+        address: customer.address,
+        cap: customer.cap,
+        city: customer.city,
+        email: customer.email,
+        phone: customer.phone,
+        model: req.body.model,
+        delivered: false
       });
 
-      const post = await newPost.save();
-
-      res.json(post);
+      const order = await newOrder.save();
+      console.log(order);
+      res.json(order);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');
@@ -47,8 +54,8 @@ router.post('/',
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const posts = await Post.find().sort({ date: -1 });
-    res.json(posts);
+    const orders = await Order.find().sort({ date: -1 });
+    res.json(orders);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error')

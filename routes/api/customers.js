@@ -33,7 +33,6 @@ router.post('/',
       let oldCustomer = await Customer.findOne({ email });
 
       if(oldCustomer) {
-      // since for the other err msg we have an array of objs in check we add this one in this "funny" way
       return res
       .status(400)
       .json({ errors: [{ msg: 'User already exists' }] });
