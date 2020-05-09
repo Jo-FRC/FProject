@@ -26,7 +26,12 @@ router.post('/',
     const customer = await Customer.findOne({ "name" : req.body.name});
     try {
 
-      const newOrder = {
+      const order = {
+        ordernumber:  req.body.ordernumber,
+        text:  req.body.text,
+        model: req.body.model
+      };
+      const newOrder = new Order({
         ordernumber:  req.body.ordernumber,
         text:  req.body.text,
         name: customer.name,
@@ -37,12 +42,13 @@ router.post('/',
         phone: customer.phone,
         model: req.body.model,
         delivered: false
-      };
+      });
 
-      customer.orders.unshift(newOrder);
+      customer.orders.unshift(order);
 
       await customer.save();
-      res.json(customer.orders);
+      const orders = await newOrder.save();
+      res.json(orders);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');
@@ -55,15 +61,9 @@ router.post('/',
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const customers = await Customer.find();
-    const orders = [];
-    customers.forEach((customer) => {
-      if(customer.orders.length > 0) {
-        orders.push(customer.orders)
-      }
-    });
+    const orders = await Order.find().sort({ date: -1 });
     
-    res.json(orders);
+   res.json(orders);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error')
