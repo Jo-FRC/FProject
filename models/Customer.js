@@ -29,6 +29,25 @@ const CustomerSchema= new Schema({
       text: {
         type: String
       },
+      name: {
+        type: String,
+        reuired: true
+      },
+      address: {
+        type: String
+      },
+      cap: {
+        type: String
+      },
+      city: {
+        type: String
+      },
+      email: {
+        type: String
+      },
+      phone: {
+        type: String
+      },
       model: [
         {
           maglieria: {

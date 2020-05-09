@@ -25,7 +25,7 @@ router.post('/',
 
     const customer = await Customer.findOne({ "name" : req.body.name});
     try {
-      
+
       const newOrder = {
         ordernumber:  req.body.ordernumber,
         text:  req.body.text,
@@ -55,7 +55,14 @@ router.post('/',
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const orders = await Order.find().sort({ date: -1 });
+    const customers = await Customer.find();
+    const orders = [];
+    customers.forEach((customer) => {
+      if(customer.orders.length > 0) {
+        orders.push(customer.orders)
+      }
+    });
+    
     res.json(orders);
   } catch (err) {
     console.error(err.message);
