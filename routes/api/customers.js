@@ -63,6 +63,8 @@ router.post('/',
 router.get('/', auth, async (req, res) => {
   try {
     const customers = await Customer.find().sort({ name: 1 });
+    console.log(customers[0].name);
+    console.log(customers[0].orders);
     res.json(customers);
   } catch (err) {
     console.error(err.message);

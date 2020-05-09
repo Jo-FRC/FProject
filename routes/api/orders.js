@@ -25,8 +25,8 @@ router.post('/',
 
     const customer = await Customer.findOne({ "name" : req.body.name});
     try {
-      console.log(customer);
-      const newOrder = new Order({
+      
+      const newOrder = {
         ordernumber:  req.body.ordernumber,
         text:  req.body.text,
         name: customer.name,
@@ -37,11 +37,12 @@ router.post('/',
         phone: customer.phone,
         model: req.body.model,
         delivered: false
-      });
+      };
 
-      const order = await newOrder.save();
-      console.log(order);
-      res.json(order);
+      customer.orders.unshift(newOrder);
+
+      await customer.save();
+      res.json(customer.orders);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');
