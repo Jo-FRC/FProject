@@ -56,18 +56,42 @@ router.post('/',
 
 });
 
-// @route   GET api/posts
+// @route   GET api/orders
 // @desc    Get all posts
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
     const orders = await Order.find().sort({ date: -1 });
-    
+
    res.json(orders);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error')
   }
 });
+
+// @route   DELETE api/orders/:id
+// @desc    Delete a post
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if(!order) {
+      return res.status(404).json({ msg: 'Order not found' })
+    }
+
+    await order.remove();
+
+    res.json({msg: 'Order removed'});
+  } catch (err) {
+    console.error(err.message);
+    if(err.name == 'CastError') {
+      return res.status(400).json({ msg: 'Post not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 
 module.exports = router;
