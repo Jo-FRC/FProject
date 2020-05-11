@@ -26,11 +26,11 @@ router.post('/',
     const customer = await Customer.findOne({ "name" : req.body.name});
     try {
 
-      const order = {
-        ordernumber:  req.body.ordernumber,
-        text:  req.body.text,
-        model: req.body.model
-      };
+      // const order = {
+      //   ordernumber:  req.body.ordernumber,
+      //   text:  req.body.text,
+      //   model: req.body.model
+      // };
       const newOrder = new Order({
         ordernumber:  req.body.ordernumber,
         text:  req.body.text,
@@ -44,9 +44,9 @@ router.post('/',
         delivered: false
       });
 
-      customer.orders.unshift(order);
-
-      await customer.save();
+      // customer.orders.unshift(order);
+      //
+      // await customer.save();
       const orders = await newOrder.save();
       res.json(orders);
     } catch (err) {
@@ -89,6 +89,63 @@ router.delete('/:id', auth, async (req, res) => {
     if(err.name == 'CastError') {
       return res.status(400).json({ msg: 'Post not found' });
     }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/profile/:id
+// @desc    Update order
+// @access  Private
+// auth and check are the middleware in this case
+router.put('/:id', [ auth
+],
+async (req, res) => {
+  const errors = validationResult(req);
+  if(!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array()});
+  }
+  // destructuring req.body
+  const {
+      ordernumber,
+      text,
+      model,
+      color
+  } = req.body;
+
+  // Build profile object
+  const orderFields = {};
+  // We have a reference to the order req.order.id
+  orderFields.order = req.params.id;
+  if(ordernumber) orderFields.ordernumber = ordernumber;
+  if(text) orderFields.text = text;
+
+
+
+  orderFields.model = {};
+  // if we don't add that model is an obj it will return an error saying cannot find youtube of undefined
+  if(model) orderFields.model.model = model;
+  if(color) orderFields.model.color = color;
+
+
+  try {
+    let order = await Order.findById(req.params.id);
+    if(order) {
+      // Update
+
+      order = await Order.findOneAndUpdate(
+        req.params.id,
+        { $set: orderFields},
+        { new: true }
+      );
+
+      return res.json(order);
+    }
+
+
+    await order.save();
+    res.json(order);
+  } catch(err) {
+    console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
